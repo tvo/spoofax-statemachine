@@ -1,0 +1,3 @@
+[submodule "Java-StateMachine-Lib"]
+	path = Java-StateMachine-Lib
+	url = git://github.com/tvo/java-statemachine-lib.git
