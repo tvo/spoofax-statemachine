@@ -1,0 +1,19 @@
+events
+  hallLightOn HLON
+  hallLightOff HLOF
+end
+
+commands
+  sendOpenTweet TWOP
+  sendCloseTweet TWCL
+end
+
+state open
+  actions {sendOpenTweet}
+  hallLightOff => closed
+end
+
+state closed
+  actions {sendCloseTweet}
+  hallLightOn => open
+end
