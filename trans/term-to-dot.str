@@ -1,0 +1,84 @@
+/*
+ * Author: Tobi Vollebregt
+ * Generic term to dot conversion
+ */
+
+module term-to-dot
+imports
+  libstratego-lib
+
+rules
+// Without maximal sharing
+/*
+  term-to-dot:
+    t -> $(
+      digraph {
+        node[fontname="Sans Serif", fontsize=9]
+        edge[fontname="Sans Serif", fontsize=9]
+        (node*)
+        (edge*)
+      }
+    )
+    with {|Nodes, Edges:
+      topdown(\t -> t{<new>}\);
+      topdown(term-to-dot-output);
+      node* := <bagof-Nodes>;
+      edge* := <bagof-Edges>
+    |}
+
+  term-to-dot-output:
+    t@ cons#(args){node} -> t
+    with
+      label := <([] -> "List") <+ escape> cons;
+      rules(
+        Nodes :+= $((node) [label="(label)"]
+                   )
+      );
+      <map(\x{n} -> x
+            where
+              rules (
+                Edges :+= $((node) -> (n)
+                           )
+              )
+           \)> args
+*/
+
+// With maximal sharing:
+  term-to-dot:
+    t -> $(
+      digraph {
+        node[fontname="Sans Serif", fontsize=9]
+        edge[fontname="Sans Serif", fontsize=9]
+        (node*)
+        (edge*)
+      }
+    )
+    with {|NewName, Nodes, Edges:
+      topdown(term-to-dot-rename);
+      topdown(term-to-dot-output);
+      node* := <bagof-Nodes>;
+      edge* := <bagof-Edges>
+    |}
+
+  term-to-dot-rename:
+    t -> t
+    with
+      x := <new>;
+      rules( NewName :+ t -> x )
+
+  term-to-dot-output:
+    t@ cons#(args) -> t
+    with
+      node  := <NewName> t;
+      label := <([] -> "List") <+ escape> cons;
+      rules(
+        Nodes :+= $((node) [label="(label)"]
+                   )
+      );
+      <map(\x -> x
+            where
+              rules (
+                Edges :+= $((node) -> (<NewName> x)
+                           )
+              )
+           \)> args

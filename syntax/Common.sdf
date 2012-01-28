@@ -1,0 +1,39 @@
+module Common
+
+exports
+
+  lexical syntax
+
+    [a-zA-Z][a-zA-Z0-9\_]*           -> ID
+    [a-zA-Z0-9\_]+                   -> Code
+
+    [\ \t\n\r] -> LAYOUT
+
+    [\*]                             -> CommentChar
+    "/*" (~[\*] | CommentChar)* "*/" -> LAYOUT
+    "//" ~[\n\r]* ([\n\r] | EOF)     -> LAYOUT
+
+    -> EOF
+
+    "end" -> ID   {reject}
+    "end" -> Code {reject}
+
+  lexical restrictions
+
+    %% Ensure greedy matching for lexicals
+
+    CommentChar   -/- [\/]
+    ID            -/- [a-zA-Z0-9\_]
+    Code          -/- [a-zA-Z0-9\_]
+
+    %% EOF may not be followed by any char
+
+    EOF           -/- ~[]
+
+  context-free restrictions
+
+    %% Ensure greedy matching for comments
+
+    LAYOUT? -/- [\ \t\n\r]
+    LAYOUT? -/- [\/].[\/]
+    LAYOUT? -/- [\/].[\*]

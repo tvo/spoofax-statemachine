@@ -1,0 +1,16 @@
+module StateMachine.main
+
+imports StateMachine-Builders StateMachine-Colorer StateMachine-Completions StateMachine-Folding StateMachine-Outliner StateMachine-References StateMachine-Syntax
+
+language General properties
+                  
+  name          : StateMachine
+  id            : StateMachine
+  extends       : Root
+                  
+  description   : "Spoofax/IMP-generated editor for the StateMachine language"
+  url           : http://strategoxt.org
+                  
+  extensions    : stm
+  table         : include/StateMachine.tbl
+  start symbols : Start

@@ -1,0 +1,68 @@
+module generate-dot
+
+imports
+  libstratego-lib
+  include/StateMachine
+  desugar
+
+rules
+  to-dot:
+    StateMachine(event*, resetEvent*, command*, state*) -> $(
+      digraph {
+        node[fontname="Sans Serif", fontsize=9, shape=record]
+        edge[fontname="Sans Serif", fontsize=9]
+        (node*)
+        (edge*)
+        (resetEventsNode)
+        (startStateStyle)
+      }
+    )
+    with
+      (node*, edge*) := <map(to-dot); unzip> state*;
+      if !resetEvent* => [] then
+        resetEventsNode := ""
+      else
+        resetEvent'* := <map(to-dot)> resetEvent*;
+        resetEventsNode := $(
+          resetEvents [
+            label="Reset Events:\n(resetEvent'*)"
+            shape=box
+            style=dotted
+          ])
+      end;
+      if !state* => [] then
+        startStateStyle := ""
+      else
+        State(startStateName, _, _) := <Hd> state*;
+        startStateStyle := $((startStateName) [penwidth=2])
+      end
+
+  to-dot:
+    State(name, action*, transition*) -> (
+      $((name) [label="(label)"]
+        ),
+      $(
+        (transition'*))
+    )
+    with {|CurrentState:
+      rules( CurrentState := name );
+      if !action* => [] then
+        label := name
+      else
+        action'* := <map(to-dot)> action*;
+        label := $({(name)|(action'*)})
+      end;
+      transition'* := <map(to-dot)> transition*
+    |}
+
+  to-dot:
+    Transition(event, state) -> $(
+      (<CurrentState>) -> (state) [label="(event')"])
+    with
+      event' := <concat-strings> [" ", event, " "]
+
+  to-dot:
+    Action(name) -> $((name)\n)
+
+  to-dot:
+    ResetEvent(name) -> $((name)\n)

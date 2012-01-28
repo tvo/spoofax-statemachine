@@ -1,0 +1,111 @@
+module check
+
+imports
+  libstratego-lib
+  include/StateMachine
+  lib/editor-common.generated
+
+rules
+
+  // Analysis: does a topdown traversal of the tree,
+  // and tries to apply the declare rule.
+  analyze:
+    t -> t
+    with
+      <topdown(try(declare))> t
+
+  declare:
+    t@ Event(name, code) -> t
+    with
+      rules(
+        GetEvent :+ name -> t
+        GetByCode :+ code -> t
+      )
+
+  declare:
+    t@ Command(name, code) -> t
+    with
+      rules(
+        GetCommand :+ name -> t
+        GetByCode :+ code -> t
+      )
+
+  declare:
+    t@ State(name, _, _) -> t
+    with
+      rules(
+        GetState :+ name -> t
+      )
+
+rules
+
+  // Reports an error if an entity is not declared.
+  constraint-error:
+    EventRef(x) -> (x, $[Event [x] is not declared])
+    where
+      not(<GetEvent> x)
+
+  constraint-error:
+    CommandRef(x) -> (x, $[Command [x] is not declared])
+    where
+      not(<GetCommand> x)
+
+  constraint-error:
+    StateRef(x) -> (x, $[State [x] is not declared])
+    where
+      not(<GetState> x);
+      rules(
+        // For completion of used but undeclared states.
+        GetUndeclaredState : x -> x
+      )
+
+  // Reports an error if an entity is declared more than once.
+  // This constraint is implemented by testing if the "bag" of
+  // all entities x is not a singleton list.
+  constraint-error:
+    Event(x, _) -> (x, $[Duplicate event name])
+    where
+      not(<bagof-GetEvent> x => [_])
+
+  constraint-error:
+    Command(x, _) -> (x, $[Duplicate command name])
+    where
+      not(<bagof-GetCommand> x => [_])
+
+  constraint-error:
+    State(x, _, _) -> (x, $[Duplicate state name])
+    where
+      not(<bagof-GetState> x => [_])
+
+  constraint-error:
+    Event(_, x) -> (x, $[Duplicate event/command code])
+    where
+      not(<bagof-GetByCode> x => [_])
+
+  constraint-error:
+    Command(_, x) -> (x, $[Duplicate event/command code])
+    where
+      not(<bagof-GetByCode> x => [_])
+
+  // Reports an error for an incomplete transition.
+  // This is the counterpart to the extra production in the grammar
+  // which enables completion for the event name in a transition.
+  constraint-error:
+    Transition-RECOVER(x) -> (x, $[Expected "event => state"])
+
+  // These checks could have been enforced in the lexical syntax,
+  // but that would have resulted in less meaningful errors.
+  constraint-error:
+    Event(_, code) -> (code, $[Code must have a length of 4 characters])
+    where
+      not(<string-length> code => 4)
+
+  constraint-error:
+    Event(_, code) -> (code, $[Code must contain uppercase chars and digits only])
+    where
+      <explode-string; not(all(is-upper + is-num))> code
+
+  constraint-error:
+    StateMachine(x, eof') -> (eof', $[State machine must have at least one state])
+    where
+      not(<fetch(?State(_, _, _))> x)

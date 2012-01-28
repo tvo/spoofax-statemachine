@@ -1,0 +1,36 @@
+module desugar
+
+imports
+  libstratego-lib
+  include/StateMachine
+
+signature
+  constructors
+    StateMachine : List(Event) * List(ResetEvent) * List(Command) * List(State) -> Start
+
+strategies
+  desugar = topdown(try(DesugarOnce))
+
+rules
+  DesugarOnce:
+    StateMachine(x, _) -> StateMachine(events, resetEvents, commands, states)
+    with
+      events      := <collect-om(?Event(_, _))> x;
+      resetEvents := <collect-om(?ResetEvent(_))> x;
+      commands    := <collect-om(?Command(_, _))> x;
+      states      := <collect-om(?State(_, _, _))> x
+
+  DesugarOnce:
+    State(name, Some(Actions(actions)), transitions) -> State(name, actions, transitions)
+
+  DesugarOnce:
+    State(name, None(), transitions) -> State(name, [], transitions)
+
+  DesugarOnce:
+    EventRef(t) -> t
+
+  DesugarOnce:
+    CommandRef(t) -> t
+
+  DesugarOnce:
+    StateRef(t) -> t

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?eclipse version="3.0"?>
+
+<plugin>
+       <extension point="org.eclipse.imp.runtime.languageDescription">
+          <language extensions="stm" description="StateMachine" language="StateMachine" derivedFrom="DynamicRoot" validator="StateMachine.StateMachineValidator" validatorClass="StateMachine.StateMachineValidator"></language>
+       </extension>
+       <extension id="StateMachine.parser" name="StateMachine Parser" point="org.eclipse.imp.runtime.parser">
+          <parser class="StateMachine.StateMachineParseController" language="StateMachine">
+          </parser>
+       </extension>    
+    </plugin>

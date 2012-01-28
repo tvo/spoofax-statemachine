@@ -1,0 +1,50 @@
+%% Grammar for the State Machine language
+module StateMachine
+
+imports Common
+
+exports
+
+  context-free start-symbols
+    Start
+
+  context-free syntax
+
+    Block* EOF -> Start {cons("StateMachine")}
+
+    "events"
+      Event*
+    "end"          -> Block       {cons("Events")}
+
+    "resetEvents"
+      ResetEvent*
+    "end"          -> Block       {cons("ResetEvents")}
+
+    "commands"
+      Command*
+    "end"          -> Block       {cons("Commands")}
+
+    "state" ID
+      Actions?
+      Transition*
+    "end"          -> Block       {cons("State")}
+
+    "actions" "{"
+      Action*
+    "}"            -> Actions     {cons("Actions")}
+
+    ID Code        -> Event       {cons("Event")}
+    ID Code        -> Command     {cons("Command")}
+    ERef           -> ResetEvent  {cons("ResetEvent")}
+    CRef           -> Action      {cons("Action")}
+    ERef "=>" SRef -> Transition  {cons("Transition")}
+
+    ID -> CRef {cons("CommandRef")}
+    ID -> ERef {cons("EventRef")}
+    ID -> SRef {cons("StateRef")}
+
+  context-free syntax
+
+    %% Create a well-formed AST for an incomplete transition.
+    %% This enables completion of the event name in a transition.
+    ERef -> Transition {cons("Transition-RECOVER")}

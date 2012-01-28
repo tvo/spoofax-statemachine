@@ -1,0 +1,65 @@
+module generate-java
+
+imports
+  libstratego-lib
+  include/StateMachine
+  desugar
+
+rules
+  to-java(|classname):
+    StateMachine(event*, resetEvent*, command*, state*) -> $[
+      public class [classname] {
+        public static StateMachine build() {
+          [event'*]
+          [command'*]
+          [state1*]
+          StateMachine machine = new StateMachine([startState]);
+          [state2*]
+          [resetEvents'*]
+          return machine;
+        }
+
+        public static void main(String["[]"] args) {
+          Driver.run(build());
+        }
+      }
+    ]
+    with
+      event'* := <map(to-java)> event*;
+      command'* := <map(to-java)> command*;
+      (state1*, state2*) := <map(to-java); unzip> state*;
+      resetEvents'* := <map(to-java)> resetEvent*;
+      State(startState, _, _) := <Hd> state*
+
+  to-java:
+    Event(name, code) -> $[
+       Event [name] = new Event("[name]", "[code]");]
+
+  to-java:
+    Command(name, code) -> $[
+      Command [name] = new Command("[name]", "[code]");]
+
+  to-java:
+    State(name, action*, transition*) -> (
+      $[
+        State [name] = new State("[name]");],
+      $[[action'*]
+        [transition'*]]
+    )
+    with {|CurrentState:
+      rules( CurrentState := name );
+      action'* := <map(to-java)> action*;
+      transition'* := <map(to-java)> transition*
+    |}
+
+  to-java:
+    Action(name) -> $[
+      [<CurrentState>].addAction([name]);]
+
+  to-java:
+    Transition(event, state) -> $[
+      [<CurrentState>].addTransition([event], [state]);]
+
+  to-java:
+    ResetEvent(name) -> $[
+      machine.addResetEvents([name]);]

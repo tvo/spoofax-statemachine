@@ -1,0 +1,25 @@
+module StateMachine-Completions
+
+imports StateMachine-Completions.generated
+
+completions
+
+  // Syntax completion:
+
+  completion template : Block = "events\n\t" <> "\nend" (blank)
+  completion template : Block = "resetEvents\n\t" <> "\nend" (blank)
+  completion template : Block = "commands\n\t" <> "\nend" (blank)
+  completion template : Block = "state " <name> "\n\t" <> "\nend" (blank)
+  completion template : Transition = "actions {" <> "}" (blank)
+
+  //completion template : Definition = "entity " <e> " {}" (blank)
+
+  //completion template : Property =   <x> " : " <T> (blank)
+
+
+completions
+  // Semantic (identifier) completion:
+
+  completion proposer                  : editor-complete
+
+  //completion trigger                   : ":"
